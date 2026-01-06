@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 const Navbar = () => {
   const { user } = useUser();
-  console.log(user);
+  // console.log(user);
 
  useEffect(() => {
   const storeUserData = async () => {
