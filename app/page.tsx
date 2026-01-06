@@ -1,5 +1,15 @@
-import { ComponentExample } from "@/components/component-example";
+import Container from '@/components/Container'
+import Navbar from '@/components/Navbar'
+import React from 'react'
 
-export default function Page() {
-return <ComponentExample />;
+const page = () => {
+  return (
+       <Container>
+    <div>
+        <Navbar />
+    </div>
+    </Container>
+  )
 }
+
+export default page
