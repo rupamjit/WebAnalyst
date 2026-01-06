@@ -40,7 +40,7 @@ export const POST = async (req: Request, res: Response) => {
     const findWebsite = await prisma.website.findFirst({
       where: {
         domain,
-        userId: findUser.id, 
+        userId: findUser.id,
       },
     });
 
@@ -59,6 +59,39 @@ export const POST = async (req: Request, res: Response) => {
     });
 
     return new Response(JSON.stringify(website), { status: 201 });
+  } catch (error) {
+    console.log(error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
+};
+
+export const GET = async () => {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    // Find the user in the database using Clerk ID
+    const findUser = await prisma.user.findFirst({
+      where: {
+        clerkId: user.id,
+      },
+    });
+
+    if (!findUser) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    // Now use the database user ID to fetch websites
+    const allWebsite = await prisma.website.findMany({
+      where: {
+        userId: findUser.id,
+      },
+    });
+
+    console.log(allWebsite);
+    return new Response(JSON.stringify(allWebsite), { status: 200 });
   } catch (error) {
     console.log(error);
     return new Response("Internal Server Error", { status: 500 });

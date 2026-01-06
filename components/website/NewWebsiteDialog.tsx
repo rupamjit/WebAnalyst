@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TIMEZONES } from "@/lib/timezones";
-import { Checkbox } from "./ui/checkbox";
+import { Checkbox } from "../ui/checkbox";
 import axios from "axios";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -29,15 +29,17 @@ import { toast } from "sonner";
 const NewWebsiteDialog = ({
   open,
   onOpenChange,
+  onSuccess,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => Promise<void>;
 }) => {
   const [domain, setDomain] = useState("");
   const [timezone, setTimezone] = useState("");
   const [enableLocalHostTracking, setEnableLocalHostTracking] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  
   const onFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
@@ -50,18 +52,30 @@ const NewWebsiteDialog = ({
         enableLocalTracking: enableLocalHostTracking,
       });
 
-      console.log(result.data);
-      toast.success("Website added successfully!");
+      // console.log(result.data);
+      toast("Website added successfully!", {
+        duration: 3000,
+        position: "top-center",
+        cancel:true
+      });
+      if (onSuccess) {
+        await onSuccess();
+      }
+      
       setLoading(false);
       onOpenChange(false);
+      
+
+      setDomain("");
+      setTimezone("");
+      setEnableLocalHostTracking(false);
     } catch (error: any) {
       console.log(error);
-      // Extract error message from Axios error
       const errorMessage = error.response?.data || error.message || "Failed to add website";
       toast.error(errorMessage);
       setLoading(false);
     }
-  };
+  } 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
