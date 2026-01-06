@@ -1,14 +1,37 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { SignedIn, SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
-import { SignedOut, UserButton } from "@clerk/clerk-react";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
 import { Button } from "./ui/button";
+import { checkUser } from "@/actions/user";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const { user } = useUser();
   console.log(user);
+
+ useEffect(() => {
+  const storeUserData = async () => {
+    try {
+      await checkUser();
+    } catch (error) {
+      toast("Error in storing data");
+    }
+  };
+
+  if (user) {
+    storeUserData();
+  }
+}, [user]);
+
 
   return (
     <div className="flex items-center justify-between p-4 mx-2">
