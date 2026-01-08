@@ -1,7 +1,8 @@
 import prisma from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export const POST = async (req: Request, res: Response) => {
+export const POST = async (req: NextRequest, res: NextResponse) => {
   try {
     const user = await currentUser();
     if (!user) {
@@ -9,7 +10,7 @@ export const POST = async (req: Request, res: Response) => {
     }
 
     const userId = user.id;
-    console.log(userId);
+    // console.log(userId);
     const { websiteId, domain, timezone, enableLocalTracking } =
       await req.json();
 
@@ -83,14 +84,13 @@ export const GET = async () => {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // Now use the database user ID to fetch websites
     const allWebsite = await prisma.website.findMany({
       where: {
         userId: findUser.id,
       },
     });
 
-    console.log(allWebsite);
+    // console.log(allWebsite);
     return new Response(JSON.stringify(allWebsite), { status: 200 });
   } catch (error) {
     console.log(error);

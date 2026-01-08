@@ -25,6 +25,7 @@ import { Checkbox } from "../ui/checkbox";
 import axios from "axios";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import AnalyticsInstructionsDialog from "./AnalyticsInstructionsDialog";
 
 const NewWebsiteDialog = ({
   open,
@@ -40,6 +41,13 @@ const NewWebsiteDialog = ({
   const [enableLocalHostTracking, setEnableLocalHostTracking] = useState(false);
   const [loading, setLoading] = useState(false);
   
+  // Analytics instructions dialog state
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [createdWebsite, setCreatedWebsite] = useState<{
+    websiteId: string;
+    domain: string;
+  } | null>(null);
+  
   const onFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
@@ -52,20 +60,24 @@ const NewWebsiteDialog = ({
         enableLocalTracking: enableLocalHostTracking,
       });
 
-      // console.log(result.data);
-      toast("Website added successfully!", {
-        duration: 3000,
-        position: "top-center",
-        cancel:true
-      });
+      toast.success("Website added successfully!");
+      
       if (onSuccess) {
         await onSuccess();
       }
       
       setLoading(false);
       onOpenChange(false);
-      
 
+      // Store created website data and show instructions
+      const websiteData = result.data.data || result.data;
+      setCreatedWebsite({
+        websiteId: websiteData.websiteId,
+        domain: websiteData.domain,
+      });
+      setShowInstructions(true);
+
+      // Reset form
       setDomain("");
       setTimezone("");
       setEnableLocalHostTracking(false);
@@ -78,6 +90,7 @@ const NewWebsiteDialog = ({
   } 
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={(e) => onFormSubmit(e)}>
@@ -172,6 +185,17 @@ const NewWebsiteDialog = ({
         </form>
       </DialogContent>
     </Dialog>
+    
+    {/* Analytics Instructions Dialog */}
+    {createdWebsite && (
+      <AnalyticsInstructionsDialog
+        open={showInstructions}
+        onOpenChange={setShowInstructions}
+        websiteId={createdWebsite.websiteId}
+        domain={createdWebsite.domain}
+      />
+    )}
+    </>
   );
 };
 

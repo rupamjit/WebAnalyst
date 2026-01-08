@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
+import Script from "next/script";
 
 
 const jetbrainsMono = JetBrains_Mono({
@@ -38,6 +39,14 @@ export default function RootLayout({
         >
           {children}
           <Toaster />
+          
+          {/* Analytics Script */}
+          <Script
+            src="http://localhost:3000/analytics.js"
+            data-website-id="c284c9ed-053c-43cc-9074-6191d42d73da"
+            data-domain="http://localhost:3000/"
+            strategy="afterInteractive"
+          />
         </body>
       </html>
     </ClerkProvider>

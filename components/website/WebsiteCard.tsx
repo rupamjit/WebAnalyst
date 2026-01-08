@@ -1,6 +1,6 @@
 "use client";
 import { Website } from "@/types/website";
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "../ui/button";
 import {
   Globe,
@@ -21,8 +21,11 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { toast } from "sonner";
+import AnalyticsInstructionsDialog from "./AnalyticsInstructionsDialog";
 
 const WebsiteCard = ({ website }: { website: Website }) => {
+  const [showInstructions, setShowInstructions] = useState(false);
+
   // Format date
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
@@ -49,7 +52,8 @@ const WebsiteCard = ({ website }: { website: Website }) => {
   };
 
   return (
-    <div className="p-6 border rounded-lg space-y-4 bg-card hover:shadow-lg ">
+    <>
+    <div className="p-6 border rounded-lg space-y-4 bg-card hover:shadow-lg transition-all duration-300 hover:border-primary/50">
       {/* Header section */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -69,7 +73,7 @@ const WebsiteCard = ({ website }: { website: Website }) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowInstructions(true)}>
               <Eye className="h-4 w-4 mr-2" />
               View Analytics
             </DropdownMenuItem>
@@ -129,12 +133,25 @@ const WebsiteCard = ({ website }: { website: Website }) => {
         <p className="text-xs text-muted-foreground">
           Created {formatDate(website.createdAt)}
         </p>
-        <Button size="sm" variant="outline">
+        <Button 
+          size="sm" 
+          variant="outline"
+          onClick={() => setShowInstructions(true)}
+        >
           <Eye className="h-4 w-4 mr-1.5" />
           View
         </Button>
       </div>
     </div>
+    
+    {/* Analytics Instructions Dialog */}
+    <AnalyticsInstructionsDialog
+      open={showInstructions}
+      onOpenChange={setShowInstructions}
+      websiteId={website.websiteId}
+      domain={website.domain}
+    />
+    </>
   );
 };
 

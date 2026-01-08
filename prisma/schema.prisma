@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,13 +21,69 @@ model User {
 }
 
 model Website {
-  id                  String   @id @default(cuid())
-  websiteId           String   @unique
+  id                  String            @id @default(cuid())
+  websiteId           String            @unique
   domain              String
   timezone            String
-  enableLocalTracking Boolean  @default(false)
+  enableLocalTracking Boolean           @default(false)
   userId              String
-  user                User     @relation(fields: [userId], references: [id])
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  user                User              @relation(fields: [userId], references: [id])
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  websitePageViews    WebsitePageView[]
+}
+
+model WebsitePageView {
+  id String @id @default(cuid())
+
+  // Tracking type
+  type String
+
+  // Website information
+  websiteId String
+  website   Website @relation(fields: [websiteId], references: [websiteId])
+  domain    String
+
+  // Page
+  url      String
+  referrer String?
+
+  // Time tracking
+  entryTime       DateTime?
+  exitTime        DateTime?
+  activeTime      Int?
+  serverTimestamp DateTime  @default(now())
+
+  // User agent
+  userAgent      String?
+  device         String? 
+  browser        String?
+  browserVersion String?
+  os             String?
+  osVersion      String?
+
+  // User preferences
+  language String?
+
+  // Geolocation
+  ip       String?
+  country  String?
+  region   String?
+  city     String?
+  timezone String?
+
+  // UTM Parameters (Marketing Attribution)
+  utm_source   String?
+  utm_medium   String?
+  utm_campaign String?
+  utm_term     String?
+  utm_content  String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([websiteId])
+  @@index([type])
+  @@index([serverTimestamp])
 }
