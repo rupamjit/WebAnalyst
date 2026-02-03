@@ -49,7 +49,7 @@ export default function WebsiteAnalyticsDashboard({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-full h-96 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-600 font-medium">Loading analytics...</p>
@@ -60,9 +60,9 @@ export default function WebsiteAnalyticsDashboard({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm p-8 max-w-md text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="w-full h-96 flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-md text-center">
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">⚠️</span>
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Data</h2>
@@ -74,9 +74,9 @@ export default function WebsiteAnalyticsDashboard({
 
   if (!analytics) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm p-8 max-w-md text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="w-full h-96 flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-md text-center">
+          <div className="w-16 h-16 bg-gray-50 text-gray-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">📊</span>
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">No Data Available</h2>
@@ -103,40 +103,37 @@ export default function WebsiteAnalyticsDashboard({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <span className="text-indigo-600 font-bold text-sm">📊</span>
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">
-                  {analytics.website.domain}
-                </h1>
-              </div>
-            </div>
-            
-            {/* Date Range Selector */}
-            <div className="flex items-center gap-2">
-              <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="today">Today</option>
-                <option value="7d">Last 7 days</option>
-                <option value="30d">Last 30 days</option>
-                <option value="90d">Last 90 days</option>
-              </select>
-            </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+            <span className="text-xl">📊</span>
           </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              {analytics.website.domain}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Analytics overview
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all cursor-pointer hover:bg-gray-50"
+          >
+            <option value="today">Today</option>
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+          </select>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Stats Bar */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
