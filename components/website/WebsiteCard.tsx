@@ -1,7 +1,8 @@
 "use client";
 import { Website } from "@/types/website";
 import React, { useState } from "react";
-import { Button } from "../ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "../ui/button";
 import {
   Globe,
   Clock,
@@ -73,9 +74,18 @@ const WebsiteCard = ({ website }: { website: Website }) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Link
+                href={`/dashboard/website/${website.websiteId}`}
+                className="flex items-center w-full cursor-pointer"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Analytics
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowInstructions(true)}>
-              <Eye className="h-4 w-4 mr-2" />
-              View Analytics
+              <Copy className="h-4 w-4 mr-2" />
+              Get Install Code
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => copyToClipboard(website.websiteId)}>
               <Copy className="h-4 w-4 mr-2" />
@@ -133,14 +143,13 @@ const WebsiteCard = ({ website }: { website: Website }) => {
         <p className="text-xs text-muted-foreground">
           Created {formatDate(website.createdAt)}
         </p>
-        <Button 
-          size="sm" 
-          variant="outline"
-          onClick={() => setShowInstructions(true)}
+        <Link
+          href={`/dashboard/website/${website.websiteId}`}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
         >
           <Eye className="h-4 w-4 mr-1.5" />
           View
-        </Button>
+        </Link>
       </div>
     </div>
     
