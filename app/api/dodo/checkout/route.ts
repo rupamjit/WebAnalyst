@@ -33,6 +33,9 @@ export async function POST(req: Request) {
       customer: {
         email: email,
         name: name,
+        metadata: {
+            userId: user.id
+        }
       },
       metadata: {
           userId: user.id

@@ -42,7 +42,7 @@ export default function PricingSection() {
       ],
       buttonText: "Upgrade to PRO",
       popular: true,
-      checkoutUrl: "https://test.checkout.dodopayments.com/buy/pdt_0NXmG0XvHnpZuaIo8zvT4?quantity=1",
+      productId: "pdt_0NXmG0XvHnpZuaIo8zvT4",
     },
     {
       name: "Business",
@@ -58,11 +58,11 @@ export default function PricingSection() {
       ],
       buttonText: "Upgrade to Business",
       popular: false,
-      checkoutUrl: "https://test.checkout.dodopayments.com/buy/pdt_0NXmG95HyNf2UGtiXdkWe?quantity=1",
+      productId: "pdt_0NXmG95HyNf2UGtiXdkWe",
     }
   ];
 
-  const handlePlanClick = async (plan: typeof plans[0] & { checkoutUrl?: string }) => {
+  const handlePlanClick = async (plan: typeof plans[0]) => {
     if (plan.name === "Hobby") {
       router.push("/dashboard");
       return;
@@ -75,23 +75,33 @@ export default function PricingSection() {
     
     setLoading(plan.name);
     try {
-      if (plan.checkoutUrl) {
-          const targetUrl = new URL(plan.checkoutUrl);
-          targetUrl.searchParams.append("metadata[userId]", user.id);
-          targetUrl.searchParams.append("email", user.emailAddresses[0].emailAddress);
-          
-          window.location.href = targetUrl.toString();
-          return;
+      if ('productId' in plan && plan.productId) {
+          const response = await fetch("/api/dodo/checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ productId: plan.productId }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+              throw new Error(data.error || "Failed to create checkout session");
+          }
+
+          if (data.url) {
+             window.location.href = data.url;
+             return;
+          }
+      } else {
+        toast.error("Checkout configuration missing.");
       }
-      
-      toast.error("Checkout configuration missing.");
       
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || "Failed to start payment.");
-    } finally {
-      setTimeout(() => setLoading(null), 1000);
-    }
+      setLoading(null);
+    } 
+
   };
 
   return (
