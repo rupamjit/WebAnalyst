@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import PricingSection from "@/components/PricingSection";
 import { 
   ArrowRight, 
   BarChart2, 
@@ -389,106 +390,9 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="py-24 bg-muted/30">
-         <div className="container px-4 md:px-6 mx-auto space-y-12">
-            <motion.div 
-              className="text-center max-w-2xl mx-auto"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={containerVariants}
-            >
-               <motion.h2 variants={itemVariants} className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-                 Simple, transparent pricing
-               </motion.h2>
-               <motion.p variants={itemVariants} className="text-muted-foreground text-lg">
-                 Start for free, upgrade as you grow. No hidden fees.
-               </motion.p>
-            </motion.div>
-
-            <motion.div 
-              className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={containerVariants}
-            >
-               {/* Free Plan */}
-               <motion.div variants={itemVariants}>
-                 <Card className="border-border/50 shadow-sm relative h-full">
-                    <CardHeader>
-                       <CardTitle>Hobby</CardTitle>
-                       <CardDescription>For personal projects</CardDescription>
-                       <div className="mt-4 mb-2">
-                          <span className="text-4xl font-bold">$0</span>
-                          <span className="text-muted-foreground">/mo</span>
-                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <ul className="space-y-2 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Up to 3,000 pageviews</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> 1 Website</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> 24h Data retention</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Community support</li>
-                       </ul>
-                       <Button variant="outline" className="w-full mt-4">Get Started</Button>
-                    </CardContent>
-                 </Card>
-               </motion.div>
-
-               {/* Pro Plan */}
-               <motion.div variants={itemVariants} className="relative z-10">
-                 <Card className="border-primary shadow-lg relative bg-background/50 md:scale-105 h-full">
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                       <Badge className="bg-primary text-primary-foreground px-3">Most Popular</Badge>
-                    </div>
-                    <CardHeader>
-                       <CardTitle>Pro</CardTitle>
-                       <CardDescription>For growing startups</CardDescription>
-                       <div className="mt-4 mb-2">
-                          <span className="text-4xl font-bold">$14</span>
-                          <span className="text-muted-foreground">/mo</span>
-                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <ul className="space-y-2 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Up to 100k pageviews</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> 10 Websites</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Unlimited retention</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Email support</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Custom events</li>
-                       </ul>
-                       <Button className="w-full shadow-lg shadow-primary/20 mt-4">Start 14-day Trial</Button>
-                    </CardContent>
-                 </Card>
-               </motion.div>
-
-               {/* Business Plan */}
-               <motion.div variants={itemVariants}>
-                 <Card className="border-border/50 shadow-sm relative h-full">
-                    <CardHeader>
-                       <CardTitle>Business</CardTitle>
-                       <CardDescription>For scale and teams</CardDescription>
-                       <div className="mt-4 mb-2">
-                          <span className="text-4xl font-bold">$49</span>
-                          <span className="text-muted-foreground">/mo</span>
-                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <ul className="space-y-2 text-sm text-muted-foreground">
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> 1M+ pageviews</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Unlimited Websites</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Team members</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> Priority support</li>
-                          <li className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /> API Access</li>
-                       </ul>
-                       <Button variant="outline" className="w-full mt-4">Contact Sales</Button>
-                    </CardContent>
-                 </Card>
-               </motion.div>
-            </motion.div>
-         </div>
-      </section>
+      <div className="bg-muted/30">
+        <PricingSection />
+      </div>
 
       {/* CTA Section */}
       <section className="py-24 relative overflow-hidden">
