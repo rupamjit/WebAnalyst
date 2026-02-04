@@ -93,12 +93,15 @@ const syncDodoSubscription = async () => {
     const user = await currentUser();
     if (!user) return { success: false, error: "Unauthorized" };
 
+    const PRODUCT_PLANS: Record<string, string> = {
+        "pdt_0NXmG0XvHnpZuaIo8zvT4": "PRO",
+        "pdt_0NXmG95HyNf2UGtiXdkWe": "Business",
+    };
+
     try {
         const email = user.emailAddresses[0].emailAddress;
 
-        const subscriptions = await dodo.subscriptions.list({
-             // limit: 100,
-        });
+        const subscriptions = await dodo.subscriptions.list({});
 
         const items = (subscriptions as any).items || (Array.isArray(subscriptions) ? subscriptions : []);
         
@@ -111,15 +114,17 @@ const syncDodoSubscription = async () => {
         }
 
         if (activeSub) {
+             const productId = activeSub.product_id || activeSub.productId;
+             const plan = PRODUCT_PLANS[productId] || "PRO";
              
              await prisma.user.update({
                 where: { clerkId: user.id },
                 data: { 
-                    subscriptionPlan: "PRO", 
+                    subscriptionPlan: plan, 
                     subscriptionStatus: "active"
                 }
             });
-            return { success: true, plan: "PRO" };
+            return { success: true, plan };
         }
         
         return { success: false, error: "No active subscription found" };
