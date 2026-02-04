@@ -1,16 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Check, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 
 export default function PricingSection() {
   const router = useRouter();
   const { user } = useUser();
-  const [loading, setLoading] = useState<string | null>(null);
 
   const plans = [
     {
@@ -42,7 +40,7 @@ export default function PricingSection() {
       ],
       buttonText: "Upgrade to PRO",
       popular: true,
-      productId: "pdt_0NXmG0XvHnpZuaIo8zvT4",
+      checkoutUrl: "https://test.checkout.dodopayments.com/buy/pdt_0NXmG0XvHnpZuaIo8zvT4?quantity=1",
     },
     {
       name: "Business",
@@ -58,11 +56,11 @@ export default function PricingSection() {
       ],
       buttonText: "Upgrade to Business",
       popular: false,
-      productId: "pdt_0NXmG95HyNf2UGtiXdkWe",
+      checkoutUrl: "https://test.checkout.dodopayments.com/buy/pdt_0NXmG95HyNf2UGtiXdkWe?quantity=1",
     },
   ];
 
-  const handlePlanClick = async (plan: any) => {
+  const handlePlanClick = (plan: { name: string; checkoutUrl?: string }) => {
     if (plan.name === "Hobby") {
       router.push("/dashboard");
       return;
@@ -73,25 +71,8 @@ export default function PricingSection() {
       return;
     }
 
-    setLoading(plan.name);
-
-    try {
-      const res = await fetch("/api/dodo/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: plan.productId }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error);
-      }
-
-      window.location.href = data.url;
-    } catch (err: any) {
-      toast.error(err.message || "Payment failed");
-      setLoading(null);
+    if (plan.checkoutUrl) {
+      window.location.href = plan.checkoutUrl;
     }
   };
 
@@ -118,16 +99,8 @@ export default function PricingSection() {
             <Button
               className="w-full mt-6"
               onClick={() => handlePlanClick(plan)}
-              disabled={loading !== null}
             >
-              {loading === plan.name ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Processing
-                </>
-              ) : (
-                plan.buttonText
-              )}
+              {plan.buttonText}
             </Button>
           </div>
         ))}
