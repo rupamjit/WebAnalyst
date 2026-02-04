@@ -3,7 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
     const { getPlanLimits } = await import("@/lib/plans");
 
-export const POST = async (req: NextRequest, res: NextResponse) => {
+export const POST = async (req: NextRequest) => {
   try {
     const user = await currentUser();
     if (!user) {
