@@ -12,18 +12,22 @@ import DevicesTable from "./analytics/DevicesTable";
 
 interface WebsiteAnalyticsDashboardProps {
   websiteId: string;
+  initialData?: AnalyticsData | null;
 }
 
 export default function WebsiteAnalyticsDashboard({
   websiteId,
+  initialData
 }: WebsiteAnalyticsDashboardProps) {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(initialData || null);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [activeMetric, setActiveMetric] = useState<string>("visitors");
   const [dateRange, setDateRange] = useState<string>("7d");
 
   useEffect(() => {
+    if (initialData) return;
+
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
@@ -45,7 +49,7 @@ export default function WebsiteAnalyticsDashboard({
     if (websiteId) {
       fetchAnalytics();
     }
-  }, [websiteId]);
+  }, [websiteId, initialData]);
 
   if (loading) {
     return (
@@ -101,6 +105,36 @@ export default function WebsiteAnalyticsDashboard({
     if (mins > 0) return `${mins}m ${secs}s`;
     return `${secs}s`;
   };
+
+  // Filter data based on date range
+  const getFilteredDailyViews = () => {
+    if (!analytics?.timeAnalytics?.dailyViews) return [];
+    
+    const now = new Date();
+    const views = [...analytics.timeAnalytics.dailyViews];
+    
+    // Sort by date just in case
+    views.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    let daysToSubtract = 7;
+    if (dateRange === "today") daysToSubtract = 0; // Handled separately or just show 1 day
+    else if (dateRange === "30d") daysToSubtract = 30;
+    else if (dateRange === "90d") daysToSubtract = 90;
+    
+    if (dateRange === "today") {
+       // Just return today's data if exists, or last entry
+       const todayStr = new Date().toISOString().split('T')[0];
+       return views.filter(v => v.date === todayStr);
+    }
+    
+    const cutoffDate = new Date();
+    cutoffDate.setDate(now.getDate() - daysToSubtract);
+    
+    return views.filter(v => new Date(v.date) >= cutoffDate);
+  };
+
+  const filteredDailyViews = getFilteredDailyViews();
+
 
   return (
     <div className="space-y-6">
@@ -184,7 +218,7 @@ export default function WebsiteAnalyticsDashboard({
 
         {/* Main Chart */}
         <div className="mb-6">
-          <VisitorsChart dailyViews={analytics.timeAnalytics.dailyViews} />
+          <VisitorsChart dailyViews={filteredDailyViews} />
         </div>
 
         {/* Two Column Layout - Sources & Pages */}
@@ -195,13 +229,19 @@ export default function WebsiteAnalyticsDashboard({
           />
           <TopPagesTable
             pages={analytics.popularPages}
+            entryPages={analytics.entryPages}
+            exitPages={analytics.exitPages}
             totalViews={analytics.overview.totalPageViews}
           />
         </div>
 
         {/* Two Column Layout - Map & Browsers */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <CountriesMap countries={analytics.countries} />
+          <CountriesMap 
+            countries={analytics.countries} 
+            regions={analytics.regions} 
+            cities={analytics.cities} 
+          />
           <BrowsersTable browsers={analytics.browsers} />
         </div>
 

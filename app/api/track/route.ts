@@ -14,6 +14,18 @@ export const POST = async (req: NextRequest) => {
             );
         }
 
+        const website = await prisma.website.findUnique({
+            where: { id: body.websiteId }
+        });
+
+        if (!website) {
+            console.error(`Website not found: ${body.websiteId}`);
+            return NextResponse.json(
+                { error: "Website not found" },
+                { status: 404 }
+            );
+        }
+
         const trackingType = body.type || "entry";
         console.log(`Tracking ${trackingType} for website:`, body.websiteId);
 

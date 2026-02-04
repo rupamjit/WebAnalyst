@@ -34,36 +34,45 @@ const Navbar = () => {
 
 
   return (
-    <div className="flex items-center justify-between p-4 ">
-      <Link href={"/"}>
-        <div className="flex items-center gap-2 cursor-pointer">
-          <Image src={"/logo.png"} alt="logo" width={40} height={40} />
-          <h1 className="text-xl font-extrabold hover:text-gray-700">
+    <nav className="fixed top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <div className="container max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+        <Link href={"/"} className="flex items-center gap-2 group transition-opacity hover:opacity-90">
+          <div className="relative w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center p-1.5 ring-1 ring-primary/20 group-hover:ring-primary/40 transition-all">
+             <Image src={"/logo.png"} alt="logo" width={32} height={32} className="object-contain" />
+          </div>
+          <span className="text-lg font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
             WebAnalyst
-          </h1>
+          </span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <SignedOut>
+            <SignInButton forceRedirectUrl="/dashboard">
+              <Button
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 hidden sm:flex"
+              >
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton forceRedirectUrl="/dashboard">
+              <Button className="shadow-lg shadow-primary/20 rounded-full px-6">
+                Get Started
+              </Button>
+            </SignUpButton>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/dashboard">
+              <Button variant="ghost" className="mr-2 text-muted-foreground hover:text-foreground">
+                Dashboard
+              </Button>
+            </Link>
+            <div className="h-8 w-8 rounded-full ring-2 ring-primary/10 overflow-hidden">
+               <UserButton appearance={{ elements: { avatarBox: "w-full h-full" } }} />
+            </div>
+          </SignedIn>
         </div>
-      </Link>
-      <div className="flex items-center gap-5">
-        <SignedOut>
-          <SignInButton forceRedirectUrl="/dashboard">
-            <Button
-              variant="outline"
-              className="cursor-pointer text-sm sm:text-base px-3 sm:px-4 py-2"
-            >
-              Sign In
-            </Button>
-          </SignInButton>
-          <SignUpButton forceRedirectUrl="/dashboard">
-            <Button className="cursor-pointer text-sm sm:text-base px-3 sm:px-4 py-2">
-              Sign Up
-            </Button>
-          </SignUpButton>
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
       </div>
-    </div>
+    </nav>
   );
 };
 

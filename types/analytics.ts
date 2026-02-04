@@ -100,15 +100,31 @@ export interface PageView {
   updatedAt: Date;
 }
 
+export interface RegionStats {
+  region: string;
+  country: string;
+  count: number;
+}
+
+export interface CityStats {
+  city: string;
+  country: string;
+  count: number;
+}
+
 export interface AnalyticsData {
   website: WebsiteDetails;
   overview: AnalyticsOverview;
   popularPages: PopularPage[];
+  entryPages: PopularPage[];
+  exitPages: PopularPage[];
   trafficSources: TrafficSource[];
   devices: DeviceStats[];
   browsers: BrowserStats[];
   operatingSystems: OSStats[];
   countries: CountryStats[];
+  regions: RegionStats[];
+  cities: CityStats[];
   campaigns: CampaignStats[];
   timeAnalytics: TimeAnalytics;
   recentPageViews: PageView[];

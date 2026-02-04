@@ -5,15 +5,21 @@ import { PopularPage } from "@/types/analytics";
 
 interface TopPagesTableProps {
   pages: PopularPage[];
+  entryPages?: PopularPage[];
+  exitPages?: PopularPage[];
   totalViews: number;
 }
 
 type TabType = "top" | "entry" | "exit";
 
-export default function TopPagesTable({ pages, totalViews }: TopPagesTableProps) {
+export default function TopPagesTable({ pages, entryPages, exitPages, totalViews }: TopPagesTableProps) {
   const [activeTab, setActiveTab] = useState<TabType>("top");
 
-  const maxViews = pages.length > 0 ? Math.max(...pages.map((p) => p.views)) : 1;
+  const activePages = activeTab === "top" ? pages 
+    : activeTab === "entry" ? (entryPages || [])
+    : (exitPages || []);
+
+  const maxViews = activePages.length > 0 ? Math.max(...activePages.map((p) => p.views)) : 1;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
@@ -62,8 +68,8 @@ export default function TopPagesTable({ pages, totalViews }: TopPagesTableProps)
 
       {/* Pages List */}
       <div className="space-y-2">
-        {pages.length > 0 ? (
-          pages.slice(0, 10).map((page, index) => {
+        {activePages.length > 0 ? (
+          activePages.slice(0, 10).map((page, index) => {
             const percentage = totalViews > 0 
               ? ((page.views / totalViews) * 100).toFixed(1) 
               : "0.0";

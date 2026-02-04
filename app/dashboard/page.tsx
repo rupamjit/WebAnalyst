@@ -1,6 +1,5 @@
 "use client"
 import DashBoardComponent from '@/components/DashBoardComponent'
-import Navbar from '@/components/Navbar'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { Website } from '@/types/website'
