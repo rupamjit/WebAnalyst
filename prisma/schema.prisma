@@ -14,6 +14,9 @@ model User {
   imageUrl String?
   userName String?
 
+  subscriptionPlan   String  @default("Hobby")
+  subscriptionStatus String?
+
   websites Website[]
 
   createdAt DateTime @default(now())
@@ -56,7 +59,7 @@ model WebsitePageView {
 
   // User agent
   userAgent      String?
-  device         String? 
+  device         String?
   browser        String?
   browserVersion String?
   os             String?

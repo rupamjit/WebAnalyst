@@ -26,6 +26,37 @@ export const POST = async (req: NextRequest) => {
             );
         }
 
+
+        const user = await prisma.user.findFirst({
+            where: { id: website.userId }
+        });
+
+        if (user) {
+             const { getPlanLimits } = await import("@/lib/plans");
+             const limits = getPlanLimits(user.subscriptionPlan);
+
+             if (limits.views !== Infinity) {
+                 const now = new Date();
+                 const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                 const currentUsage = await prisma.websitePageView.count({
+                     where: {
+                         website: { userId: user.id },
+                         createdAt: { gte: startOfMonth }
+                     }
+                 });
+
+                 if (currentUsage >= limits.views) {
+                     console.warn(`Plan limit exceeded for user ${user.id}: ${currentUsage}/${limits.views}`);
+                     return NextResponse.json(
+                         { error: "Plan limit exceeded" },
+                         { status: 403 }
+                     );
+                 }
+             }
+        }
+
+
         const trackingType = body.type || "entry";
         console.log(`Tracking ${trackingType} for website:`, body.websiteId);
 
@@ -120,7 +151,6 @@ export const POST = async (req: NextRequest) => {
             );
             
         } else if (trackingType === 'exit') {
-            // Update existing page view with exit data
             if (body.pageViewId) {
                 try {
                     const pageView = await prisma.websitePageView.update({
@@ -143,8 +173,7 @@ export const POST = async (req: NextRequest) => {
                     console.error("Failed to update page view:", updateError);
                 }
             }
-            
-            //  Create new exit record if no pageViewId or update failed
+        
             const pageView = await prisma.websitePageView.create({
                 data: {
                     ...pageViewData,
@@ -153,7 +182,6 @@ export const POST = async (req: NextRequest) => {
                 }
             });
             
-            console.log("Exit tracked (fallback) with ID:", pageView.id);
             
             return NextResponse.json(
                 { message: "Exit tracked successfully" }, 

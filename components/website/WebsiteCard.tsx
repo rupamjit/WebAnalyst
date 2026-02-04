@@ -23,9 +23,12 @@ import {
 } from "../ui/dropdown-menu";
 import { toast } from "sonner";
 import AnalyticsInstructionsDialog from "./AnalyticsInstructionsDialog";
+import { useRouter } from "next/navigation";
 
 const WebsiteCard = ({ website }: { website: Website }) => {
   const [showInstructions, setShowInstructions] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
+  const router = useRouter();
 
   // Format date
   const formatDate = (date: Date | string) => {
@@ -51,6 +54,42 @@ const WebsiteCard = ({ website }: { website: Website }) => {
     navigator.clipboard.writeText(text);
     toast.success("Website ID copied to clipboard!");
   };
+
+  const performDelete = async () => {
+    try {
+      const response = await fetch(`/api/website/id?websiteId=${website.websiteId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setIsDeleted(true);
+        toast.success("Website deleted successfully");
+        router.refresh();
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Failed to delete website");
+      }
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleDelete = () => {
+    toast("Delete Website?", {
+      description: "This action cannot be undone.",
+      action: {
+        label: "Delete",
+        onClick: () => performDelete(),
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {},
+      },
+      duration: 5000,
+    });
+  };
+
+  if (isDeleted) return null;
 
   return (
     <>
@@ -92,7 +131,10 @@ const WebsiteCard = ({ website }: { website: Website }) => {
               Copy ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem 
+               className="text-destructive cursor-pointer group hover:bg-destructive/10"
+               onClick={handleDelete}
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </DropdownMenuItem>
@@ -113,7 +155,7 @@ const WebsiteCard = ({ website }: { website: Website }) => {
         </a>
       </div>
 
-      {/* Stats section - Only real data */}
+      {/* Stats section */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">

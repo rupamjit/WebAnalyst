@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
   try {
-    // Authenticate user
+  
     const user = await currentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -213,7 +213,7 @@ export const GET = async (req: NextRequest) => {
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // Hourly distribution (for last 24 hours)
+
     const last24Hours = new Date();
     last24Hours.setHours(last24Hours.getHours() - 24);
 
@@ -235,7 +235,7 @@ export const GET = async (req: NextRequest) => {
       count: viewsByHour[i] || 0,
     }));
 
-    // Construct the response
+
     const analyticsData = {
       website: {
         id: website.id,
@@ -263,7 +263,7 @@ export const GET = async (req: NextRequest) => {
         dailyViews,
         hourlyViews,
       },
-      recentPageViews: pageViews.slice(0, 20), // Last 20 page views
+      recentPageViews: pageViews.slice(0, 20), 
     };
 
     return NextResponse.json(analyticsData, { status: 200 });
@@ -273,5 +273,57 @@ export const GET = async (req: NextRequest) => {
       { error: "Internal Server Error" },
       { status: 500 }
     );
+  }
+};
+
+export const DELETE = async (req: NextRequest) => {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const websiteId = url.searchParams.get("websiteId");
+
+    if (!websiteId) {
+       return NextResponse.json({ error: "Website ID required" }, { status: 400 });
+    }
+
+    const findUser = await prisma.user.findFirst({
+      where: { clerkId: user.id },
+    });
+
+    if (!findUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+
+    const website = await prisma.website.findFirst({
+        where: {
+            websiteId: websiteId,
+            userId: findUser.id
+        }
+    });
+
+    if (!website) {
+        return NextResponse.json({ error: "Website not found or unauthorized" }, { status: 404 });
+    }
+
+
+    await prisma.websitePageView.deleteMany({
+        where: { websiteId: website.id } 
+    });
+
+
+    await prisma.website.delete({
+        where: { id: website.id }
+    });
+
+    return NextResponse.json({ message: "Website deleted successfully" }, { status: 200 });
+
+  } catch (error) {
+    console.error("Error deleting website:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 };

@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+    const { getPlanLimits } = await import("@/lib/plans");
 
 export const POST = async (req: NextRequest, res: NextResponse) => {
   try {
@@ -10,11 +11,9 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
     }
 
     const userId = user.id;
-    // console.log(userId);
+
     const { websiteId, domain, timezone, enableLocalTracking } =
       await req.json();
-
-    //   console.log(websiteId, domain, timezone, enableLocalTracking);
 
     if (
       !websiteId ||
@@ -37,7 +36,7 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // check domain already exist or not
+
     const findWebsite = await prisma.website.findFirst({
       where: {
         domain,
@@ -47,6 +46,22 @@ export const POST = async (req: NextRequest, res: NextResponse) => {
 
     if (findWebsite) {
       return new Response("Website already exists", { status: 400 });
+    }
+
+    const limits = getPlanLimits(findUser.subscriptionPlan);
+    
+  
+    const currentWebsiteCount = await prisma.website.count({
+        where: { userId: findUser.id }
+    });
+
+    if (currentWebsiteCount >= limits.websites) {
+         return new Response(
+             JSON.stringify({ 
+                 error: `Plan limit reached. Upgrade to add more websites. Limit: ${limits.websites}` 
+             }), 
+             { status: 403, headers: { 'Content-Type': 'application/json' } }
+         );
     }
 
     const website = await prisma.website.create({
@@ -73,7 +88,7 @@ export const GET = async () => {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // Find the user in the database using Clerk ID
+
     const findUser = await prisma.user.findFirst({
       where: {
         clerkId: user.id,
@@ -90,7 +105,7 @@ export const GET = async () => {
       },
     });
 
-    // console.log(allWebsite);
+
     return new Response(JSON.stringify(allWebsite), { status: 200 });
   } catch (error) {
     console.log(error);

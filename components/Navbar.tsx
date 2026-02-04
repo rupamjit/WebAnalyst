@@ -44,7 +44,11 @@ const Navbar = () => {
             WebAnalyst
           </span>
         </Link>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
+          <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Pricing
+          </Link>
+          <div className="flex items-center gap-4">
           <SignedOut>
             <SignInButton forceRedirectUrl="/dashboard">
               <Button
@@ -66,10 +70,16 @@ const Navbar = () => {
                 Dashboard
               </Button>
             </Link>
+            <Link href="/dashboard/billing">
+              <Button variant="ghost" className="mr-2 text-muted-foreground hover:text-foreground">
+                Billing
+              </Button>
+            </Link>
             <div className="h-8 w-8 rounded-full ring-2 ring-primary/10 overflow-hidden">
                <UserButton appearance={{ elements: { avatarBox: "w-full h-full" } }} />
             </div>
           </SignedIn>
+        </div>
         </div>
       </div>
     </nav>

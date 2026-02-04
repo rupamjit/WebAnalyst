@@ -69,7 +69,6 @@ const NewWebsiteDialog = ({
       setLoading(false);
       onOpenChange(false);
 
-      // Store created website data and show instructions
       const websiteData = result.data.data || result.data;
       setCreatedWebsite({
         websiteId: websiteData.websiteId,
@@ -83,7 +82,19 @@ const NewWebsiteDialog = ({
       setEnableLocalHostTracking(false);
     } catch (error: any) {
       console.log(error);
-      const errorMessage = error.response?.data || error.message || "Failed to add website";
+      const responseData = error.response?.data;
+      let errorMessage = error.message || "Failed to add website";
+
+      if (responseData) {
+          if (typeof responseData === 'string') {
+              errorMessage = responseData;
+          } else if (responseData.error && typeof responseData.error === 'string') {
+              errorMessage = responseData.error;
+          } else if (typeof responseData === 'object') {
+             errorMessage = JSON.stringify(responseData);
+          }
+      }
+      
       toast.error(errorMessage);
       setLoading(false);
     }
