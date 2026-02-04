@@ -23,7 +23,7 @@ export default function PricingSection() {
         "1 Website",
         "24-hour data retention",
         "Basic analytics",
-        "Community Support"
+        "Community Support",
       ],
       buttonText: "Get Started",
       popular: false,
@@ -38,7 +38,7 @@ export default function PricingSection() {
         "10 Websites",
         "1-year data retention",
         "Advanced filtering & events",
-        "Priority Email Support"
+        "Priority Email Support",
       ],
       buttonText: "Upgrade to PRO",
       popular: true,
@@ -54,119 +54,84 @@ export default function PricingSection() {
         "Unlimited Websites",
         "Unlimited retention",
         "Custom reports & API access",
-        "Dedicated Account Manager"
+        "Dedicated Account Manager",
       ],
       buttonText: "Upgrade to Business",
       popular: false,
       productId: "pdt_0NXmG95HyNf2UGtiXdkWe",
-    }
+    },
   ];
 
-  const handlePlanClick = async (plan: typeof plans[0]) => {
+  const handlePlanClick = async (plan: any) => {
     if (plan.name === "Hobby") {
       router.push("/dashboard");
       return;
     }
 
     if (!user) {
-        toast.error("Please login first");
-        return;
+      toast.error("Please login first");
+      return;
     }
-    
+
     setLoading(plan.name);
+
     try {
-      if ('productId' in plan && plan.productId) {
-          const response = await fetch("/api/dodo/checkout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ productId: plan.productId }),
-          });
+      const res = await fetch("/api/dodo/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: plan.productId }),
+      });
 
-          const data = await response.json();
+      const data = await res.json();
 
-          if (!response.ok) {
-              throw new Error(data.error || "Failed to create checkout session");
-          }
-
-          if (data.url) {
-             window.location.href = data.url;
-             return;
-          }
-      } else {
-        toast.error("Checkout configuration missing.");
+      if (!res.ok) {
+        throw new Error(data.error);
       }
-      
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Failed to start payment.");
-      setLoading(null);
-    } 
 
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast.error(err.message || "Payment failed");
+      setLoading(null);
+    }
   };
 
   return (
     <section className="py-24" id="pricing">
-        <div className="text-center space-y-4 mb-16 px-4">
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-primary">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choose the perfect plan for your needs. No hidden fees, no credit card required to start.
-          </p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
+        {plans.map((plan) => (
+          <div key={plan.name} className="p-8 border rounded-2xl">
+            <h3 className="text-xl font-bold">{plan.name}</h3>
+            <p className="text-4xl font-bold mt-2">
+              {plan.price}
+              <span className="text-sm text-muted-foreground">{plan.period}</span>
+            </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
-          {plans.map((plan) => (
-            <div 
-              key={plan.name}
-              className={`relative flex flex-col p-8 bg-card rounded-2xl border ${
-                plan.popular 
-                  ? "border-primary shadow-2xl scale-105 z-10" 
-                  : "border-border shadow-sm hover:shadow-md transition-shadow"
-              }`}
+            <ul className="mt-6 space-y-2">
+              {plan.features.map((f: string) => (
+                <li key={f} className="flex gap-2">
+                  <Check className="w-4 h-4 text-green-500" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            <Button
+              className="w-full mt-6"
+              onClick={() => handlePlanClick(plan)}
+              disabled={loading !== null}
             >
-              {plan.popular && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                  Most Popular
-                </div>
+              {loading === plan.name ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Processing
+                </>
+              ) : (
+                plan.buttonText
               )}
-
-              <div className="mb-8">
-                <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground">{plan.period}</span>
-                </div>
-                <p className="text-muted-foreground text-sm">{plan.description}</p>
-              </div>
-
-              <div className="flex-1 space-y-4 mb-8">
-                {plan.features.map((feature) => (
-                  <div key={feature} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-500 shrink-0" />
-                    <span className="text-sm">{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Button 
-                onClick={() => handlePlanClick(plan)}
-                variant={plan.popular ? "default" : "outline"}
-                disabled={loading !== null}
-                className={`w-full ${plan.popular ? "bg-primary hover:bg-primary/90" : ""}`}
-              >
-                {loading === plan.name ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Processing...
-                  </div>
-                ) : (
-                  plan.buttonText
-                )}
-              </Button>
-            </div>
-          ))}
-        </div>
+            </Button>
+          </div>
+        ))}
+      </div>
     </section>
-  )
+  );
 }
