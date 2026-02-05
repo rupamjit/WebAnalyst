@@ -101,64 +101,115 @@ const syncDodoSubscription = async () => {
     try {
         const email = user.emailAddresses[0].emailAddress;
 
-
-        const subscriptions = await dodo.subscriptions.list({});
-        console.log("Dodo subscriptions response:", JSON.stringify(subscriptions, null, 2));
-
-        // Handle different response formats
-        let items: any[] = [];
-        if (subscriptions && typeof subscriptions === 'object') {
-            if ('items' in subscriptions && Array.isArray((subscriptions as any).items)) {
-                items = (subscriptions as any).items;
-            } else if (Array.isArray(subscriptions)) {
-                items = subscriptions;
-            } else if ('data' in subscriptions && Array.isArray((subscriptions as any).data)) {
-                items = (subscriptions as any).data;
+        // Strategy 1: Check Payments (Best for different emails but matching Metadata)
+        const paymentsResponse = await dodo.payments.list({
+            page_size: 100,
+        });
+        
+        // Handle payment list structure variations
+        let payments: any[] = [];
+        if (paymentsResponse && typeof paymentsResponse === 'object') {
+             if ('items' in paymentsResponse && Array.isArray((paymentsResponse as any).items)) {
+                payments = (paymentsResponse as any).items;
+            } else if (Array.isArray(paymentsResponse)) {
+                payments = paymentsResponse;
+            } else if ('data' in paymentsResponse && Array.isArray((paymentsResponse as any).data)) {
+                payments = (paymentsResponse as any).data;
             }
         }
+
+        let matchedSubscriptionId: string | null = null;
         
-        
-        
-        let activeSub = null;
-        for (const sub of items) {
-            console.log("Checking subscription:", {
-                id: sub.subscription_id || sub.id,
-                status: sub.status,
-                customerEmail: sub.customer?.email,
-                productId: sub.product_id || sub.productId
+        // Find payment with matching userId in metadata
+        const matchedPayment = payments.find(p => {
+            const meta = p.metadata as Record<string, any> | undefined;
+            return meta?.userId === user.id && (p.subscription_id || p.subscriptionId);
+        });
+
+        if (matchedPayment) {
+            matchedSubscriptionId = matchedPayment.subscription_id || matchedPayment.subscriptionId;
+        }
+
+        let activeSub: any = null;
+
+        // If we found a subscription ID from the payment, fetch it directly
+        if (matchedSubscriptionId) {
+             try {
+                const sub = await dodo.subscriptions.retrieve(matchedSubscriptionId);
+                if (sub && sub.status === 'active') {
+                    activeSub = sub;
+                }
+             } catch (err) {
+                 console.error("Could not fetch specific subscription:", err);
+             }
+        }
+
+        // Strategy 2: Fallback to listing Subscriptions (If no payment match or direct fetch failed)
+        if (!activeSub) {
+             const subscriptions = await dodo.subscriptions.list({
+                page_size: 100,
             });
-            
-            
-            if (sub.status === 'active' && sub.customer?.email === email) {
-                activeSub = sub;
-                break;
+
+            let items: any[] = [];
+            if (subscriptions && typeof subscriptions === 'object') {
+                if ('items' in subscriptions && Array.isArray((subscriptions as any).items)) {
+                    items = (subscriptions as any).items;
+                } else if (Array.isArray(subscriptions)) {
+                    items = subscriptions;
+                } else if ('data' in subscriptions && Array.isArray((subscriptions as any).data)) {
+                    items = (subscriptions as any).data;
+                }
+            }
+
+            // Find valid subscription in the list
+            for (const sub of items) {
+                const subEmail = sub.customer?.email?.toLowerCase();
+                const userEmail = email.toLowerCase();
+                const metadata = sub.metadata as Record<string, any> | undefined;
+                
+                const matchesMetadata = metadata?.userId === user.id;
+                const matchesEmail = subEmail?.toLowerCase() === userEmail?.toLowerCase();
+
+                if (sub.status === 'active' && (matchesEmail || matchesMetadata)) {
+                    activeSub = sub;
+                    break;
+                }
             }
         }
 
         if (activeSub) {
             const productId = activeSub.product_id || activeSub.productId;
-            const plan = PRODUCT_PLANS[productId] || "PRO";
-            
-           
+            const plan = PRODUCT_PLANS[productId];
              
-            await prisma.user.update({
-                where: { clerkId: user.id },
-                data: { 
-                    subscriptionPlan: plan, 
-                    subscriptionStatus: "active"
-                }
-            });
-            return { success: true, plan };
+            if (plan) {
+                await prisma.user.update({
+                    where: { clerkId: user.id },
+                    data: { 
+                        subscriptionPlan: plan, 
+                        subscriptionStatus: "active"
+                    }
+                });
+                return { success: true, plan };
+            }
         }
         
-      
-        return { success: false, error: "No active subscription found" };
+        // Default to Hobby if no active sub found
+        await prisma.user.update({
+            where: { clerkId: user.id },
+            data: { 
+                subscriptionPlan: "Hobby", 
+                subscriptionStatus: "active"
+            }
+        });
+        return { success: true, plan: "Hobby" };
 
     } catch (e) {
         console.error("Dodo Sync Error:", e);
         return { success: false, error: "Sync failed" };
     }
-}
+};
+
+
 
 export { checkUser, getUserData, getUserUsageStats, upgradeSubscription, syncDodoSubscription };
 

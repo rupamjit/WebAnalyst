@@ -42,24 +42,38 @@ export async function POST(req: Request) {
   const eventType = evt.type;
   console.log(`Dodo Webhook received: ${eventType}`);
 
-  try {
+  // Product ID to Plan mapping
+  const PRODUCT_PLANS: Record<string, string> = {
+    "pdt_0NXmG0XvHnpZuaIo8zvT4": "PRO",
+    "pdt_0NXmG95HyNf2UGtiXdkWe": "Business",
+  };
 
+  try {
       const data = evt.data;
       
-   
+      // Extract userId from various possible locations in webhook payload
       const userId = data.metadata?.userId || 
                      data.customer?.metadata?.userId || 
                      data.subscription?.metadata?.userId ||
                      data.payload?.metadata?.userId; 
 
+      // Extract product_id to determine the plan
+      const productId = data.product_id || 
+                        data.subscription?.product_id ||
+                        data.payload?.product_id ||
+                        data.product_cart?.[0]?.product_id;
+
       if (userId) {
         if (eventType === "subscription.active" || eventType === "payment.succeeded") {
-            console.log(`Activating subscription for user: ${userId}`);
+            // Determine the plan based on the product_id
+            const plan = productId ? (PRODUCT_PLANS[productId] || "PRO") : "PRO";
+            
+            console.log(`Activating subscription for user: ${userId}, Plan: ${plan}, Product: ${productId}`);
             
             await prisma.user.update({
-                where: { id: userId },
+                where: { clerkId: userId },
                 data: {
-                    subscriptionPlan: "PRO", 
+                    subscriptionPlan: plan, 
                     subscriptionStatus: "active"
                 }
             });
@@ -68,7 +82,7 @@ export async function POST(req: Request) {
         if (eventType === "subscription.cancelled" || eventType === "payment.failed") {
              console.log(`Deactivating subscription for user: ${userId}`);
              await prisma.user.update({
-                where: { id: userId },
+                where: { clerkId: userId },
                 data: {
                     subscriptionPlan: "Hobby", 
                     subscriptionStatus: "inactive"
@@ -76,7 +90,7 @@ export async function POST(req: Request) {
             });
         }
       } else {
-          console.log("No User ID found in webhook metadata");
+          console.log("No User ID found in webhook metadata. Data:", JSON.stringify(data, null, 2));
       }
   } catch (dbError) {
       console.error("Database error processing webhook:", dbError);
