@@ -3,99 +3,100 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function POST(req: Request) {
-  const WEBHOOK_SECRET = process.env.DODO_PAYMENTS_WEBHOOK_SECRET;
+const PRODUCT_TO_PLAN: Record<string, string> = {
+  pdt_0NXmG0XvHnpZuaIo8zvT4: "PRO",
+  pdt_0NXmG95HyNf2UGtiXdkWe: "Business",
+};
 
-  if (!WEBHOOK_SECRET) {
+interface WebhookEvent {
+  type: string;
+  data: {
+    metadata?: { userId?: string };
+    customer?: { metadata?: { userId?: string } };
+    subscription?: { metadata?: { userId?: string }; product_id?: string };
+    product_id?: string;
+    product_cart?: Array<{ product_id?: string }>;
+  };
+}
+
+export async function POST(req: Request) {
+  const secret = process.env.DODO_PAYMENTS_WEBHOOK_SECRET;
+  
+  if (!secret) {
     console.error("DODO_PAYMENTS_WEBHOOK_SECRET is not set");
     return NextResponse.json({ error: "Webhook secret missing" }, { status: 500 });
   }
 
-  // Verify Payload matches Svix Header
-  const headerPayload = await headers();
-  const svix_id = headerPayload.get("svix-id");
-  const svix_timestamp = headerPayload.get("svix-timestamp");
-  const svix_signature = headerPayload.get("svix-signature");
-
-  if (!svix_id || !svix_timestamp || !svix_signature) {
-    return NextResponse.json({ error: "Missing svix headers" }, { status: 400 });
-  }
-
-  // Get raw body
-  const payload = await req.json();
-  const body = JSON.stringify(payload);
-
-  const wh = new Webhook(WEBHOOK_SECRET);
-  let evt: any;
-
   try {
-    evt = wh.verify(body, {
-      "svix-id": svix_id,
-      "svix-timestamp": svix_timestamp,
-      "svix-signature": svix_signature,
-    });
-  } catch (err) {
-    console.error("Webhook verification failed:", err);
-    return NextResponse.json({ error: "Verification failed" }, { status: 400 });
-  }
+    const payload = await req.json();
+    const body = JSON.stringify(payload);
 
-  const eventType = evt.type;
-  console.log(`Dodo Webhook received: ${eventType}`);
+    const h = await headers();
+    const svixId = h.get("svix-id");
+    const svixTimestamp = h.get("svix-timestamp");
+    const svixSignature = h.get("svix-signature");
 
-  // Product ID to Plan mapping
-  const PRODUCT_PLANS: Record<string, string> = {
-    "pdt_0NXmG0XvHnpZuaIo8zvT4": "PRO",
-    "pdt_0NXmG95HyNf2UGtiXdkWe": "Business",
-  };
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      return NextResponse.json({ error: "Missing svix headers" }, { status: 400 });
+    }
 
-  try {
-      const data = evt.data;
+    const wh = new Webhook(secret);
+    const evt = wh.verify(body, {
+      "svix-id": svixId,
+      "svix-timestamp": svixTimestamp,
+      "svix-signature": svixSignature,
+    }) as WebhookEvent;
+
+    const data = evt.data;
+
+    const userId =
+      data.metadata?.userId ||
+      data.customer?.metadata?.userId ||
+      data.subscription?.metadata?.userId;
+
+    const productId =
+      data.product_id ||
+      data.subscription?.product_id ||
+      data.product_cart?.[0]?.product_id;
+
+    console.log(`Webhook received: ${evt.type}, userId: ${userId}, productId: ${productId}`);
+
+    if (!userId) {
+      console.log("Webhook missing userId");
+      return NextResponse.json({ ok: true });
+    }
+
+    if (evt.type === "subscription.active" || evt.type === "payment.succeeded") {
+      const plan = productId ? PRODUCT_TO_PLAN[productId] : undefined;
       
-      // Extract userId from various possible locations in webhook payload
-      const userId = data.metadata?.userId || 
-                     data.customer?.metadata?.userId || 
-                     data.subscription?.metadata?.userId ||
-                     data.payload?.metadata?.userId; 
-
-      // Extract product_id to determine the plan
-      const productId = data.product_id || 
-                        data.subscription?.product_id ||
-                        data.payload?.product_id ||
-                        data.product_cart?.[0]?.product_id;
-
-      if (userId) {
-        if (eventType === "subscription.active" || eventType === "payment.succeeded") {
-            // Determine the plan based on the product_id
-            const plan = productId ? (PRODUCT_PLANS[productId] || "PRO") : "PRO";
-            
-            console.log(`Activating subscription for user: ${userId}, Plan: ${plan}, Product: ${productId}`);
-            
-            await prisma.user.update({
-                where: { clerkId: userId },
-                data: {
-                    subscriptionPlan: plan, 
-                    subscriptionStatus: "active"
-                }
-            });
-        }
-        
-        if (eventType === "subscription.cancelled" || eventType === "payment.failed") {
-             console.log(`Deactivating subscription for user: ${userId}`);
-             await prisma.user.update({
-                where: { clerkId: userId },
-                data: {
-                    subscriptionPlan: "Hobby", 
-                    subscriptionStatus: "inactive"
-                }
-            });
-        }
+      if (plan) {
+        await prisma.user.update({
+          where: { clerkId: userId },
+          data: {
+            subscriptionPlan: plan,
+            subscriptionStatus: "active",
+          },
+        });
+        console.log(`Updated user ${userId} to plan: ${plan}`);
       } else {
-          console.log("No User ID found in webhook metadata. Data:", JSON.stringify(data, null, 2));
+        console.log(`Unknown productId: ${productId}, skipping plan update`);
       }
-  } catch (dbError) {
-      console.error("Database error processing webhook:", dbError);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
-  }
+    }
 
-  return NextResponse.json({ success: true }, { status: 200 });
+    if (evt.type === "subscription.cancelled" || evt.type === "payment.failed") {
+      await prisma.user.update({
+        where: { clerkId: userId },
+        data: {
+          subscriptionPlan: "Hobby",
+          subscriptionStatus: "inactive",
+        },
+      });
+      console.log(`User ${userId} subscription cancelled, reverted to Hobby`);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Webhook error:", error);
+    return NextResponse.json({ error: error.message || "Webhook failed" }, { status: 400 });
+  }
 }

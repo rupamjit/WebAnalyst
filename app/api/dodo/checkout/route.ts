@@ -10,21 +10,12 @@ export async function POST(req: Request) {
     }
 
     const { productId } = await req.json();
-
     if (!productId) {
-      return NextResponse.json(
-        { error: "Product ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Product ID required" }, { status: 400 });
     }
 
     const payment = await dodo.payments.create({
-      product_cart: [
-        {
-          product_id: productId,
-          quantity: 1,
-        },
-      ],
+      product_cart: [{ product_id: productId, quantity: 1 }],
       customer: {
         email: user.emailAddresses[0].emailAddress,
         name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim(),
@@ -36,10 +27,8 @@ export async function POST(req: Request) {
         street: "",
         zipcode: "",
       },
-      metadata: {
-        userId: user.id,
-      },
-      payment_link: true, 
+      metadata: { userId: user.id },
+      payment_link: true,
     });
 
     return NextResponse.json({ url: payment.payment_link });

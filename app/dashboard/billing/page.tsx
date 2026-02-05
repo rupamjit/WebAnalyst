@@ -1,4 +1,3 @@
-import { getUserUsageStats } from "@/actions/user";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BillingSuccess } from "@/components/BillingSuccess";
 import { SyncSubscriptionButton } from "@/components/SyncSubscriptionButton";
+import { getUserUsageStats } from "@/lib/user";
 
 
 export default async function BillingPage() {
