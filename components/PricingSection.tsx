@@ -40,7 +40,7 @@ export default function PricingSection() {
       ],
       buttonText: "Upgrade to PRO",
       popular: true,
-      checkoutUrl: "https://test.checkout.dodopayments.com/buy/pdt_0NXmG0XvHnpZuaIo8zvT4?quantity=1&redirect_url=" + encodeURIComponent(typeof window !== "undefined" ? window.location.origin + "/dashboard/billing" : ""),
+      checkoutUrl: "https://test.checkout.dodopayments.com/buy/pdt_0NXmG0XvHnpZuaIo8zvT4?quantity=1&redirect_url=" + encodeURIComponent(typeof window !== "undefined" ? window.location.origin + "/dashboard/billing?success=true" : ""),
     },
     {
       name: "Business",
@@ -56,7 +56,7 @@ export default function PricingSection() {
       ],
       buttonText: "Upgrade to Business",
       popular: false,
-      checkoutUrl: "https://test.checkout.dodopayments.com/buy/pdt_0NXmG95HyNf2UGtiXdkWe?quantity=1&redirect_url=" + encodeURIComponent(typeof window !== "undefined" ? window.location.origin + "/dashboard/billing" : ""),
+      checkoutUrl: "https://test.checkout.dodopayments.com/buy/pdt_0NXmG95HyNf2UGtiXdkWe?quantity=1&redirect_url=" + encodeURIComponent(typeof window !== "undefined" ? window.location.origin + "/dashboard/billing?success=true" : ""),
     },
   ];
 

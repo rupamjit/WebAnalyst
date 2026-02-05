@@ -101,23 +101,47 @@ const syncDodoSubscription = async () => {
     try {
         const email = user.emailAddresses[0].emailAddress;
 
-        const subscriptions = await dodo.subscriptions.list({});
 
-        const items = (subscriptions as any).items || (Array.isArray(subscriptions) ? subscriptions : []);
+        const subscriptions = await dodo.subscriptions.list({});
+        console.log("Dodo subscriptions response:", JSON.stringify(subscriptions, null, 2));
+
+        // Handle different response formats
+        let items: any[] = [];
+        if (subscriptions && typeof subscriptions === 'object') {
+            if ('items' in subscriptions && Array.isArray((subscriptions as any).items)) {
+                items = (subscriptions as any).items;
+            } else if (Array.isArray(subscriptions)) {
+                items = subscriptions;
+            } else if ('data' in subscriptions && Array.isArray((subscriptions as any).data)) {
+                items = (subscriptions as any).data;
+            }
+        }
+        
+        
         
         let activeSub = null;
         for (const sub of items) {
-             if (sub.status === 'active' && (sub.customer?.email === email)) {
-                 activeSub = sub;
-                 break;
-             }
+            console.log("Checking subscription:", {
+                id: sub.subscription_id || sub.id,
+                status: sub.status,
+                customerEmail: sub.customer?.email,
+                productId: sub.product_id || sub.productId
+            });
+            
+            
+            if (sub.status === 'active' && sub.customer?.email === email) {
+                activeSub = sub;
+                break;
+            }
         }
 
         if (activeSub) {
-             const productId = activeSub.product_id || activeSub.productId;
-             const plan = PRODUCT_PLANS[productId] || "PRO";
+            const productId = activeSub.product_id || activeSub.productId;
+            const plan = PRODUCT_PLANS[productId] || "PRO";
+            
+           
              
-             await prisma.user.update({
+            await prisma.user.update({
                 where: { clerkId: user.id },
                 data: { 
                     subscriptionPlan: plan, 
@@ -127,6 +151,7 @@ const syncDodoSubscription = async () => {
             return { success: true, plan };
         }
         
+      
         return { success: false, error: "No active subscription found" };
 
     } catch (e) {
